@@ -1,0 +1,79 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Courier New', Courier, monospace;
+  background-color: #000;
+  color: #00FF00;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: 10px;
+  overflow: hidden;
+}
+
+.welcome {
+  position: relative;
+}
+
+#output {
+  flex-grow: 1;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  padding: 10px;
+  font-size: 16px;
+}
+
+.command-line {
+  display: flex;
+  padding-top: 10px;
+}
+
+.prompt {
+  color: #aaa;
+  padding-right: 5px;
+  line-height: 1.35;
+}
+
+.input-container {
+  display: inline;
+  flex: 1;
+}
+
+.cursor {
+  display: inline-block;
+  width: 10px;
+  height: 1em;
+  background-color: #00FF00;
+  animation: blink 0.8s step-end infinite;
+}
+
+@keyframes blink {
+  50% {
+      background-color: transparent;
+  }
+}
+
+.input {
+  background: transparent;
+  border: none;
+  color: #00FF00;
+  font-size: 16px;
+  outline: none;
+}
+
+.input:focus {
+  outline: none;
+}
+
+#input {
+  border: none;
+  width: 100%;
+  color: inherit;
+  background: transparent;
+  position: relative;
+}
