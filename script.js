@@ -108,7 +108,8 @@ whoami        - Display information about the current user
 clear         - Clear the terminal
 help          - Show this help message
 cat [file]    - Display contents of a specified file
-cd [dir]      - Change to the specified directory          [ ..: Go one back ]`;
+cd [dir]      - Change to the specified directory          [ ..: Go one back ]
+matrix        - When you want to feel like a hacker        [Press any key to quit]`;
         },
         'cat': (filename) => {
             if (fileSystem[filename] && fileSystem[filename].type === 'file') {
@@ -132,6 +133,54 @@ cd [dir]      - Change to the specified directory          [ ..: Go one back ]`;
                 return `cd: ${directory}: No such directory`;
             }
         },
+        'matrix': () => {
+            const canvas = document.createElement('canvas');
+            canvas.className = 'matrix-effect';
+            canvas.style.position = 'fixed';
+            canvas.style.top = '0';
+            canvas.style.left = '0';
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+            canvas.style.zIndex = '1000';
+            canvas.style.backgroundColor = 'black';
+            document.body.appendChild(canvas);
+
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+
+            const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+            const fontSize = 20;
+            const columns = Math.floor(canvas.width / fontSize);
+            const drops = Array(columns).fill(0);
+
+            const draw = () => {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                ctx.fillStyle = '#0F0';
+                ctx.font = `${fontSize}px monospace`;
+
+                for (let i = 0; i < drops.length; i++) {
+                    const text = characters.charAt(Math.floor(Math.random() * characters.length));
+                    const x = i * fontSize;
+                    const y = drops[i] * fontSize;
+
+                    ctx.fillText(text, x, y);
+                    if (y > canvas.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                    drops[i]++;
+                }
+            };
+            const interval = setInterval(draw, 50);
+            const stopMatrixEffect = () => {
+                clearInterval(interval);
+                document.body.removeChild(canvas);
+                document.removeEventListener('keydown', stopMatrixEffect);
+            };
+            document.addEventListener('keydown', stopMatrixEffect);
+        }
     };
     
     function getUserIP() {
