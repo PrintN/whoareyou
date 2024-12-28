@@ -278,6 +278,9 @@ Battery Level: ${navigator.getBattery}%`;
         outputElement.innerHTML += `<div class="command-line" data-prompt-index="${activePromptIndex}"><span class="prompt">guest@ubuntu:${displayDirectory}$</span><span class="input-container"><span id="input" contentEditable="true"></span><span id="cursor" class="cursor"></span></span></div>`;
         outputElement.scrollTop = outputElement.scrollHeight;
         activePromptIndex++;
+        document.body.addEventListener('click', function() {
+            input.focus();
+        });
     }
 
     document.addEventListener('keydown', function (event) {
