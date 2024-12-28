@@ -47,7 +47,7 @@ body {
 .cursor {
   display: inline-block;
   width: 10px;
-  height: 1em;
+  height: 16px;
   background-color: #00FF00;
   animation: blink 0.8s step-end infinite;
 }
