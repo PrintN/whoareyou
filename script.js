@@ -279,10 +279,12 @@ Battery Level: ${navigator.getBattery}%`;
         outputElement.innerHTML += `<div class="command-line" data-prompt-index="${activePromptIndex}"><span class="prompt">guest@ubuntu:${displayDirectory}$</span><span class="input-container"><span id="input" contentEditable="true"></span><span id="cursor" class="cursor"></span></span></div>`;
         outputElement.scrollTop = outputElement.scrollHeight;
         activePromptIndex++;
-
-        const newInput = outputElement.querySelector(`.command-line[data-prompt-index="${activePromptIndex - 1}"] #input`);
-        newInput.focus();
     }
+
+    const newInput = outputElement.querySelector(`.command-line[data-prompt-index="${activePromptIndex - 1}"]`);
+    document.body.addEventListener('click', function () {
+        newInput.focus();
+    });
 
     document.addEventListener('keydown', function (event) {
         const activePrompt = document.querySelector(`.command-line[data-prompt-index="${activePromptIndex - 1}"]`);
