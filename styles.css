@@ -64,4 +64,6 @@ body {
   color: inherit;
   background: transparent;
   position: relative;
+  caret-color: transparent;
+  outline: none;
 }

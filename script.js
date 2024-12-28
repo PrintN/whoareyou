@@ -1,6 +1,5 @@
 document.addEventListener('DOMContentLoaded', function () {
     const outputElement = document.getElementById('output');
-    let currentInput = "";
     let activePromptIndex = 0;
     let currentDirectory = '~';
 
@@ -132,6 +131,7 @@ matrix        - When you want to feel like a hacker        [Press any key to qui
             } else {
                 return `cd: ${directory}: No such directory`;
             }
+            return ' ';
         },
         'matrix': () => {
             const canvas = document.createElement('canvas');
@@ -182,6 +182,7 @@ matrix        - When you want to feel like a hacker        [Press any key to qui
             };
             document.addEventListener('keydown', stopMatrixEffect);
             document.addEventListener('click', stopMatrixEffect);
+            return ' ';
         }
     };
     
@@ -278,16 +279,16 @@ Battery Level: ${navigator.getBattery}%`;
         outputElement.innerHTML += `<div class="command-line" data-prompt-index="${activePromptIndex}"><span class="prompt">guest@ubuntu:${displayDirectory}$</span><span class="input-container"><span id="input" contentEditable="true"></span><span id="cursor" class="cursor"></span></span></div>`;
         outputElement.scrollTop = outputElement.scrollHeight;
         activePromptIndex++;
-        document.body.addEventListener('click', function() {
-            input.focus();
-        });
+
+        const newInput = outputElement.querySelector(`.command-line[data-prompt-index="${activePromptIndex - 1}"] #input`);
+        newInput.focus();
     }
 
     document.addEventListener('keydown', function (event) {
         const activePrompt = document.querySelector(`.command-line[data-prompt-index="${activePromptIndex - 1}"]`);
         const inputElement = activePrompt ? activePrompt.querySelector('#input') : null;
-
         const allInputs = document.querySelectorAll('.input-container #input');
+
         allInputs.forEach(input => {
             if (input !== inputElement) {
                 input.contentEditable = "false";
@@ -298,22 +299,22 @@ Battery Level: ${navigator.getBattery}%`;
 
         if (event.key === 'Enter') {
             event.preventDefault(); 
-            const input = currentInput.trim();
+            const input = inputElement.textContent.trim();
             if (input) {
                 handleCommand(input);
             }
-            currentInput = "";
+            inputElement.textContent = "";
             addPrompt();
         }
-        else if (event.key === 'Backspace') {
-            currentInput = currentInput.slice(0, -1);
-        }
-        else if (event.key.length === 1) {
-            currentInput += event.key;
-        }
-
-        if (inputElement) {
-            inputElement.textContent = currentInput;
-        }
+        placeCaretAtEnd(inputElement);
     });
+    function placeCaretAtEnd(el) {
+        el.focus();
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        range.collapse(false);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+    }
 });
