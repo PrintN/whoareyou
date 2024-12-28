@@ -178,8 +178,10 @@ matrix        - When you want to feel like a hacker        [Press any key to qui
                 clearInterval(interval);
                 document.body.removeChild(canvas);
                 document.removeEventListener('keydown', stopMatrixEffect);
+                document.removeEventListener('click', stopMatrixEffect);
             };
             document.addEventListener('keydown', stopMatrixEffect);
+            document.addEventListener('click', stopMatrixEffect);
         }
     };
     
