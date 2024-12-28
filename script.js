@@ -281,9 +281,12 @@ Battery Level: ${navigator.getBattery}%`;
         activePromptIndex++;
     }
 
-    const newInput = outputElement.querySelector(`.command-line[data-prompt-index="${activePromptIndex - 1}"]`);
     document.body.addEventListener('click', function () {
-        newInput.focus();
+        const activePrompt = document.querySelector(`.command-line[data-prompt-index="${activePromptIndex - 1}"]`);
+        const inputElement = activePrompt ? activePrompt.querySelector('#input') : null;
+        if (inputElement) {
+            inputElement.focus();
+        }
     });
 
     document.addEventListener('keydown', function (event) {
