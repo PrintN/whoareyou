@@ -84,13 +84,12 @@ else:
             }
         },
         'whoami': async () => {
-            const ip = await getUserIP();
+            const ipInfo = await getUserIP();
             const clipboardContent = await getClipboardContent();
-            const browserInfo = getBrowserInfo();
+            const browserInfo = await getBrowserInfo();
             const downloadSpeed= await checkDownloadSpeed();
             
-            outputElement.innerHTML += `<div>User: guest</div>`;
-            outputElement.innerHTML += `<div>IP Address: ${ip}</div>`;
+            outputElement.innerHTML += `<div>${ipInfo}</div>`;
             outputElement.innerHTML += `<div>Download Speed: ${downloadSpeed}`
             outputElement.innerHTML += `<div>Clipboard: ${clipboardContent}</div>`;
             outputElement.innerHTML += `<div>${browserInfo}</div>`;
@@ -187,10 +186,24 @@ matrix        - When you want to feel like a hacker        [Press any key to qui
     };
     
     function getUserIP() {
-        return fetch('https://api.ipify.org?format=json')
-            .then(response => response.json())
-            .then(data => data.ip)
-            .catch(() => 'Unable to retrieve IP address');
+        return fetch('https://ipapi.co/json/')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                return `Public IPv4: ${data.ip}
+ISP: ${data.org}
+ASN: ${data.asn}
+Geolocation: ${data.city}, ${data.region}, ${data.country_name}
+Latitude, Longitude: ${data.latitude}, ${data.longitude}`;
+            })
+            .catch(error => {
+                console.error('Error fetching IP information:', error);
+                return 'Unable to retrieve IP information.';
+            });
     }
     
     function getClipboardContent() {
@@ -220,7 +233,68 @@ matrix        - When you want to feel like a hacker        [Press any key to qui
         }
     }
 
-    function getBrowserInfo() {
+    async function getBrowserInfo() {
+        let batteryLevel = 'N/A';
+        if (navigator.getBattery) {
+            const battery = await navigator.getBattery();
+            batteryLevel = `${(battery.level * 100).toFixed(0)}%`;
+        }
+        const screenOrientation = screen.orientation ? screen.orientation.type : 'N/A';
+        let mediaDevices = 'N/A';
+        if (navigator.mediaDevices && navigator.mediaDevices.enumerateDevices) {
+            const devices = await navigator.mediaDevices.enumerateDevices();
+            mediaDevices = devices.map(device => `${device.kind}: ${device.label || 'Unnamed'}`).join(', ');
+        }
+        let connectionType = 'N/A';
+        if (navigator.connection) {
+            connectionType = navigator.connection.effectiveType || 'N/A';
+        }
+        let bluetoothDevices = 'N/A';
+        if (navigator.bluetooth) {
+            try {
+                const devices = await navigator.bluetooth.getDevices();
+                bluetoothDevices = devices.map(device => device.name || 'Unnamed').join(', ') || 'No connected devices';
+            } catch (error) {
+                bluetoothDevices = 'Error retrieving Bluetooth devices';
+            }
+        }
+        let usbDevices = 'N/A';
+        if (navigator.usb) {
+            try {
+                const devices = await navigator.usb.getDevices();
+                usbDevices = devices.map(device => device.productName || 'Unnamed').join(', ') || 'No connected devices';
+            } catch (error) {
+                usbDevices = 'Error retrieving USB devices';
+            }
+        }
+        const webrtcSupported = !!navigator.mediaDevices && !!navigator.mediaDevices.getUserMedia;
+        const serviceWorkerSupported = 'serviceWorker' in navigator;
+        const indexedDBSupported = !!window.indexedDB;
+        const webAssemblySupported = !!window.WebAssembly;
+        const mediaSessionSupported = 'mediaSession' in navigator;
+        const touchSupport = 'ontouchstart' in window || navigator.maxTouchPoints > 0;    
+        const notificationsSupported = 'Notification' in window;
+
+        let webcamStatus = 'N/A';
+        let capturedImage = 'N/A';
+        const videoElement = document.createElement('video');
+        const canvasElement = document.createElement('canvas');
+        const imgElement = document.createElement('img');
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            videoElement.srcObject = stream;
+            videoElement.play();
+            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for 1 second
+            canvasElement.width = videoElement.videoWidth;
+            canvasElement.height = videoElement.videoHeight;
+            const context = canvasElement.getContext('2d');
+            context.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+            capturedImage = canvasElement.toDataURL('image/png');
+            webcamStatus = 'Webcam accessed successfully';
+        } catch (error) {
+            webcamStatus = 'Error accessing webcam: ' + error.message;
+        }
+    
         return `
 Previous Page: ${document.referrer}
 Tab History Length: ${window.history.length}
@@ -233,14 +307,27 @@ Cookies Enabled: ${navigator.cookieEnabled}
 Online Status: ${navigator.onLine}
 Screen Width: ${window.screen.width}
 Screen Height: ${window.screen.height}
-Screen Orientation: ${screen.orientation ? screen.orientation.type : 'N/A'}
+Screen Orientation: ${screenOrientation}
 Max Touch Points: ${navigator.maxTouchPoints}
 Color Depth: ${window.screen.colorDepth}
 Time Zone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
-Device Memory: ${navigator.deviceMemory} GB
+Device Memory: ${navigator.deviceMemory ? `${navigator.deviceMemory} GB` : 'N/A'}
 Hardware Concurrency: ${navigator.hardwareConcurrency} CPU cores
 WebGL: ${!!document.createElement('canvas').getContext('webgl')}
-Battery Level: ${navigator.getBattery}%`;
+Battery Level: ${batteryLevel}
+Media Devices: ${mediaDevices}
+Connection Type: ${connectionType}
+Bluetooth Devices: ${bluetoothDevices}
+USB Devices: ${usbDevices}
+WebRTC Supported: ${webrtcSupported}
+Service Worker Supported: ${serviceWorkerSupported}
+IndexedDB Supported: ${indexedDBSupported}
+WebAssembly Supported: ${webAssemblySupported}
+Media Session API Supported: ${mediaSessionSupported}
+Touch Support: ${touchSupport}
+Notifications Supported: ${notificationsSupported}
+Webcam Status: ${webcamStatus}
+Captured Image: <img src="${capturedImage}" alt="Captured Image" style="max-width: 200px;"/>`;
     }
 
     addPrompt();
