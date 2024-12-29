@@ -307,7 +307,7 @@ Battery Level: ${navigator.getBattery}%`;
             event.preventDefault(); 
             const input = inputElement.textContent.trim();
             if (input) {
-                handleCommand(input);
+                handleCommand(input.toLowerCase());
             }
             inputElement.textContent = "";
             addPrompt();
