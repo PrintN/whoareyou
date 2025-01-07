@@ -387,7 +387,7 @@ Canvas Fingerprint: ${canvasFingerprint}
         });
 
         const displayDirectory = currentDirectory === 'scripts/' ? '~/scripts' : currentDirectory;
-        outputElement.innerHTML += `<div class="command-line" data-prompt-index="${activePromptIndex}"><span class="prompt">guest@ubuntu:${displayDirectory}$</span><span class="input-container"><span id="input" contentEditable="true"></span><span id="cursor" class="cursor"></span></span></div>`;
+        outputElement.innerHTML += `<div class="command-line" data-prompt-index="${activePromptIndex}"><span class="prompt">guest@ubuntu:${displayDirectory}$</span><span class="input-container"><span id="input" spellcheck="false" contentEditable="true"></span><span id="cursor" class="cursor"></span></span></div>`;
         outputElement.scrollTop = outputElement.scrollHeight;
         activePromptIndex++;
         input.focus();
