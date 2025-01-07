@@ -4,9 +4,16 @@
   box-sizing: border-box;
 }
 
+:root {
+  --background-color-dark: #000;
+  --background-color-light: #fff;
+  --prompt-color-dark: #aaa;
+  --prompt-color-light: #000;
+}
+
 body {
   font-family: 'Courier New', Courier, monospace;
-  background-color: #000;
+  background-color: var(--background-color-dark);
   color: #00FF00;
   height: 100vh;
   display: flex;
@@ -14,6 +21,19 @@ body {
   justify-content: flex-start;
   padding: 10px;
   overflow: hidden;
+}
+
+body.light-mode {
+  background-color: var(--background-color-light);
+  color: var(--prompt-color-light);
+}
+
+body.light-mode .prompt {
+  color: var(--prompt-color-light);
+}
+
+body.light-mode .cursor {
+  background-color: var(--prompt-color-light);
 }
 
 .welcome {
@@ -34,7 +54,7 @@ body {
 }
 
 .prompt {
-  color: #aaa;
+  color: var(--prompt-color-dark);
   padding-right: 5px;
   line-height: 1.35;
 }

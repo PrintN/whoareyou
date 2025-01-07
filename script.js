@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const outputElement = document.getElementById('output');
     let activePromptIndex = 0;
     let currentDirectory = '~';
+    let isLightMode = false;
 
     const fileSystem = {
         '~': {
@@ -103,7 +104,8 @@ clear         - Clear the terminal
 help          - Show this help message
 cat [file]    - Display contents of a specified file
 cd [dir]      - Change to the specified directory          [ ..: Go one back ]
-matrix        - When you want to feel like a hacker        [Press any key to quit]`;
+matrix        - When you want to feel like a hacker        [Press any key to quit]
+toggle        - Toggle between light and dark mode`;
         },
         'cat': (filename) => {
             if (fileSystem[filename] && fileSystem[filename].type === 'file') {
@@ -137,7 +139,13 @@ matrix        - When you want to feel like a hacker        [Press any key to qui
             canvas.style.width = '100%';
             canvas.style.height = '100%';
             canvas.style.zIndex = '1000';
-            canvas.style.backgroundColor = 'black';
+
+            if (isLightMode) {
+                canvas.style.backgroundColor = 'white';
+            } else {
+                canvas.style.backgroundColor = 'black';
+            }
+            
             document.body.appendChild(canvas);
 
             const ctx = canvas.getContext('2d');
@@ -150,10 +158,16 @@ matrix        - When you want to feel like a hacker        [Press any key to qui
             const drops = Array(columns).fill(0);
 
             const draw = () => {
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                if (isLightMode) {
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#000';
+                } else {
+                    ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillStyle = '#0F0';
+                }
 
-                ctx.fillStyle = '#0F0';
                 ctx.font = `${fontSize}px monospace`;
 
                 for (let i = 0; i < drops.length; i++) {
@@ -168,6 +182,7 @@ matrix        - When you want to feel like a hacker        [Press any key to qui
                     drops[i]++;
                 }
             };
+
             const interval = setInterval(draw, 50);
             const stopMatrixEffect = () => {
                 clearInterval(interval);
@@ -178,7 +193,16 @@ matrix        - When you want to feel like a hacker        [Press any key to qui
             document.addEventListener('keydown', stopMatrixEffect);
             document.addEventListener('click', stopMatrixEffect);
             return ' ';
-        }
+        },
+        'toggle': () => {
+            isLightMode = !isLightMode;
+            if (isLightMode) {
+                document.body.classList.add('light-mode');
+            } else {
+                document.body.classList.remove('light-mode');
+            }
+            return ' ';
+        },
     };
     
     function getUserIP() {
