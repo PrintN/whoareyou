@@ -85,13 +85,9 @@ else:
         },
         'whoami': async () => {
             const ipInfo = await getUserIP();
-            const clipboardContent = await getClipboardContent();
             const browserInfo = await getBrowserInfo();
-            const downloadSpeed= await checkDownloadSpeed();
             
             outputElement.innerHTML += `<div>${ipInfo}</div>`;
-            outputElement.innerHTML += `<div>Download Speed: ${downloadSpeed}`
-            outputElement.innerHTML += `<div>Clipboard: ${clipboardContent}</div>`;
             outputElement.innerHTML += `<div>${browserInfo}</div>`;
             addPrompt();
         },
@@ -194,7 +190,8 @@ matrix        - When you want to feel like a hacker        [Press any key to qui
                 return response.json();
             })
             .then(data => {
-                return `Public IPv4: ${data.ip}
+                return `<strong>IP Information</strong>
+Public IPv4: ${data.ip}
 ISP: ${data.org}
 ASN: ${data.asn}
 Geolocation: ${data.city}, ${data.region}, ${data.country_name}
@@ -233,7 +230,19 @@ Latitude, Longitude: ${data.latitude}, ${data.longitude}`;
         }
     }
 
-    async function getBrowserInfo() {
+    async function getBrowserInfo() { 
+        const clipboardContent = await getClipboardContent();
+        const downloadSpeed= await checkDownloadSpeed();
+
+        const canvasFingerprint = (() => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            ctx.textBaseline = 'top';
+            ctx.font = '14px Arial';
+            ctx.fillText('Fingerprint Test', 2, 2);
+            return canvas.toDataURL();
+        })();    
+        const plugins = Array.from(navigator.plugins).map(plugin => plugin.name).join(', ') || 'No plugins detected';    
         let batteryLevel = 'N/A';
         if (navigator.getBattery) {
             const battery = await navigator.getBattery();
@@ -284,7 +293,7 @@ Latitude, Longitude: ${data.latitude}, ${data.longitude}`;
             const stream = await navigator.mediaDevices.getUserMedia({ video: true });
             videoElement.srcObject = stream;
             videoElement.play();
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait for 1 second
+            await new Promise(resolve => setTimeout(resolve, 1000));
             canvasElement.width = videoElement.videoWidth;
             canvasElement.height = videoElement.videoHeight;
             const context = canvasElement.getContext('2d');
@@ -296,11 +305,14 @@ Latitude, Longitude: ${data.latitude}, ${data.longitude}`;
         }
     
         return `
+<strong>Browser Information</strong>
+<pre>
 Previous Page: ${document.referrer}
 Tab History Length: ${window.history.length}
 User Agent: ${navigator.userAgent}
 Browser Name: ${navigator.appName}
 Browser Version: ${navigator.appVersion}
+Download Speed: ${downloadSpeed}
 Platform: ${navigator.platform}
 Language: ${navigator.language}
 Cookies Enabled: ${navigator.cookieEnabled}
@@ -311,23 +323,35 @@ Screen Orientation: ${screenOrientation}
 Max Touch Points: ${navigator.maxTouchPoints}
 Color Depth: ${window.screen.colorDepth}
 Time Zone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
-Device Memory: ${navigator.deviceMemory ? `${navigator.deviceMemory} GB` : 'N/A'}
-Hardware Concurrency: ${navigator.hardwareConcurrency} CPU cores
-WebGL: ${!!document.createElement('canvas').getContext('webgl')}
-Battery Level: ${batteryLevel}
-Media Devices: ${mediaDevices}
-Connection Type: ${connectionType}
-Bluetooth Devices: ${bluetoothDevices}
-USB Devices: ${usbDevices}
 WebRTC Supported: ${webrtcSupported}
 Service Worker Supported: ${serviceWorkerSupported}
 IndexedDB Supported: ${indexedDBSupported}
 WebAssembly Supported: ${webAssemblySupported}
 Media Session API Supported: ${mediaSessionSupported}
+</pre>
+
+<strong>Device Information</strong>
+<pre>
+Clipboard Content: ${clipboardContent}
+Media Devices: ${mediaDevices}
+Connection Type: ${connectionType}
+Bluetooth Devices: ${bluetoothDevices}
+USB Devices: ${usbDevices}
+Device Memory: ${navigator.deviceMemory ? `${navigator.deviceMemory} GB` : 'N/A'}
+Hardware Concurrency: ${navigator.hardwareConcurrency} CPU cores
+WebGL: ${!!document.createElement('canvas').getContext('webgl')}
+Battery Level: ${batteryLevel}
 Touch Support: ${touchSupport}
 Notifications Supported: ${notificationsSupported}
 Webcam Status: ${webcamStatus}
-Captured Image: <img src="${capturedImage}" alt="Captured Image" style="max-width: 200px;"/>`;
+Captured Image: <img src="${capturedImage}" alt="Captured Image" style="max-width: 200px;"/>
+</pre>
+
+<strong>Plugins and Fingerprinting</strong>
+<pre>
+Plugins: ${plugins}
+Canvas Fingerprint: ${canvasFingerprint}
+</pre>`;
     }
 
     addPrompt();
