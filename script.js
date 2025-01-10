@@ -3,11 +3,13 @@ document.addEventListener('DOMContentLoaded', function () {
     let activePromptIndex = 0;
     let currentDirectory = '~';
     let isLightMode = false;
+    let commandHistory = []
+    let commandHistoryIndex = -1
 
     const fileSystem = {
         '~': {
             type: 'directory',
-            contents: ['.secret-pancake-recipe.txt', 'readme.txt', 'scripts/']
+            contents: ['.bash_history', '.secret-pancake-recipe.txt', 'readme.txt', 'scripts/']
         },
         'scripts/': {
             type: 'directory',
@@ -21,6 +23,10 @@ If you haven't already try running the whoami command. Additionally, here are so
 
 IP Address: Use a privacy-respecting VPN (like MullvadVPN) or the Tor Browser.
 Browser Tracking: Most tracking can be prevented by disabling JavaScript in your browser settings or using an extension like NoScript (https://noscript.net/).`
+        },
+        '.bash_history': {
+            type: 'file',
+            content: ' '
         },
         '.secret-pancake-recipe.txt': {
             type: 'file',
@@ -105,7 +111,8 @@ help          - Show this help message
 cat [file]    - Display contents of a specified file
 cd [dir]      - Change to the specified directory          [ ..: Go one back ]
 matrix        - When you want to feel like a hacker        [Press any key to quit]
-toggle        - Toggle between light and dark mode`;
+toggle        - Toggle between light and dark mode
+Arrow Up/Down - Navigate through previous commands in history`;
         },
         'cat': (filename) => {
             if (fileSystem[filename] && fileSystem[filename].type === 'file') {
@@ -391,9 +398,13 @@ Canvas Fingerprint: ${canvasFingerprint}
         } else {
             result = `command not found: ${input}`;
         }
-
         if (result) {
             outputElement.innerHTML += `<div>${result}</div>`;
+        }
+        if (input) {
+            commandHistory.push(input);
+            commandHistoryIndex = commandHistory.length;
+            fileSystem['.bash_history'].content = commandHistory.join('\n');
         }
     }
 
@@ -447,6 +458,26 @@ Canvas Fingerprint: ${canvasFingerprint}
             inputElement.textContent = "";
             addPrompt();
         }
+        else if (event.key === 'ArrowUp') {
+            event.preventDefault();
+            if (commandHistoryIndex > 0) {
+                commandHistoryIndex--;
+                inputElement.textContent = commandHistory[commandHistoryIndex];
+                placeCaretAtEnd(inputElement);
+            }
+        }
+        else if (event.key === 'ArrowDown') {
+            event.preventDefault();
+            if (commandHistoryIndex < commandHistory.length - 1) {
+                commandHistoryIndex++;
+                inputElement.textContent = commandHistory[commandHistoryIndex] || '';
+                placeCaretAtEnd(inputElement);
+            }
+            else {
+                commandHistoryIndex = commandHistory.length;
+                inputElement.textContent = '';
+            }
+        } 
         placeCaretAtEnd(inputElement);
     });
     function placeCaretAtEnd(el) {
