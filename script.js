@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let isLightMode = false;
     let commandHistory = []
     let commandHistoryIndex = -1
+    let caretPosition = 0;
 
     const fileSystem = {
         '~': {
@@ -425,20 +426,22 @@ Canvas Fingerprint: ${canvasFingerprint}
         outputElement.innerHTML += `<div class="command-line" data-prompt-index="${activePromptIndex}"><span class="prompt">guest@ubuntu:${displayDirectory}$</span><span class="input-container"><span id="input" spellcheck="false" contentEditable="true"></span><span id="cursor" class="cursor"></span></span></div>`;
         outputElement.scrollTop = outputElement.scrollHeight;
         activePromptIndex++;
-        input.focus();
+        const activePrompt = document.querySelector(`.command-line[data-prompt-index="${activePromptIndex - 1}"]`);
+        const inputElement = activePrompt ? activePrompt.querySelector('#input') : null;
+        inputElement.focus();
     }
 
     document.body.addEventListener('click', function () {
         const activePrompt = document.querySelector(`.command-line[data-prompt-index="${activePromptIndex - 1}"]`);
         const inputElement = activePrompt ? activePrompt.querySelector('#input') : null;
-        if (inputElement) {
-            inputElement.focus();
-        }
+        inputElement.focus();
+        setCaretPosition(inputElement, caretPosition);
     });
 
     document.addEventListener('keydown', function (event) {
         const activePrompt = document.querySelector(`.command-line[data-prompt-index="${activePromptIndex - 1}"]`);
         const inputElement = activePrompt ? activePrompt.querySelector('#input') : null;
+        const cursor = activePrompt ? activePrompt.querySelector('#cursor') : null;
         const allInputs = document.querySelectorAll('.input-container #input');
 
         allInputs.forEach(input => {
@@ -463,7 +466,7 @@ Canvas Fingerprint: ${canvasFingerprint}
             if (commandHistoryIndex > 0) {
                 commandHistoryIndex--;
                 inputElement.textContent = commandHistory[commandHistoryIndex];
-                placeCaretAtEnd(inputElement);
+                moveCaret(inputElement, 0, cursor);
             }
         }
         else if (event.key === 'ArrowDown') {
@@ -471,22 +474,60 @@ Canvas Fingerprint: ${canvasFingerprint}
             if (commandHistoryIndex < commandHistory.length - 1) {
                 commandHistoryIndex++;
                 inputElement.textContent = commandHistory[commandHistoryIndex] || '';
-                placeCaretAtEnd(inputElement);
+                moveCaret(inputElement, 0, cursor);
             }
             else {
                 commandHistoryIndex = commandHistory.length;
                 inputElement.textContent = '';
             }
-        } 
-        placeCaretAtEnd(inputElement);
+        }
+        else if (event.key === 'ArrowLeft') {
+            event.preventDefault();
+            moveCaret(inputElement, -1, cursor);
+        }
+        else if (event.key === 'ArrowRight') {
+            event.preventDefault();
+            moveCaret(inputElement, 1, cursor);
+        }
+        caretPosition = inputElement.textContent.length + 1;
     });
-    function placeCaretAtEnd(el) {
-        el.focus();
+    function moveCaret(inputElement, direction, cursor) {
         const range = document.createRange();
-        range.selectNodeContents(el);
-        range.collapse(false);
         const sel = window.getSelection();
+        const textLength = inputElement.textContent.length;
+
+        if (sel.rangeCount > 0) {
+            const currentRange = sel.getRangeAt(0);
+            const startOffset = currentRange.startOffset;
+
+            let newOffset = startOffset + direction;
+
+            if (direction === 0) {
+                newOffset = textLength;
+            } else {
+                newOffset = Math.max(0, Math.min(newOffset, textLength));
+            }
+
+            range.setStart(inputElement.childNodes[0], newOffset);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
+        }
+        updateCursorPosition(inputElement, cursor);
+        caretPosition = range.startOffset;
+    }
+    function setCaretPosition(inputElement, position) {
+        const range = document.createRange();
+        const sel = window.getSelection();
+        range.setStart(inputElement.childNodes[0], position);
+        range.collapse(true);
         sel.removeAllRanges();
         sel.addRange(range);
+    }
+    function updateCursorPosition(inputElement, cursor) {
+        const range = window.getSelection().getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        const inputRect = inputElement.getBoundingClientRect();
+        cursor.style.left = `-${inputRect.right - rect.left}px`;
     }
 });

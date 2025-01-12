@@ -60,6 +60,7 @@ body.light-mode .cursor {
 }
 
 .cursor {
+  position: relative;
   display: inline-block;
   width: 10px;
   height: 16px;
