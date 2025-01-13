@@ -431,11 +431,17 @@ Canvas Fingerprint: ${canvasFingerprint}
         inputElement.focus();
     }
 
+    document.addEventListener('mousedown', function(event) {
+        event.preventDefault();
+    });
+    document.addEventListener('selectstart', function(event) {
+        event.preventDefault();
+    });
+
     document.body.addEventListener('click', function () {
         const activePrompt = document.querySelector(`.command-line[data-prompt-index="${activePromptIndex - 1}"]`);
         const inputElement = activePrompt ? activePrompt.querySelector('#input') : null;
         inputElement.focus();
-        setCaretPosition(inputElement, caretPosition);
     });
 
     document.addEventListener('keydown', function (event) {
@@ -489,7 +495,6 @@ Canvas Fingerprint: ${canvasFingerprint}
             event.preventDefault();
             moveCaret(inputElement, 1, cursor);
         }
-        caretPosition = inputElement.textContent.length + 1;
     });
     function moveCaret(inputElement, direction, cursor) {
         const range = document.createRange();
@@ -515,14 +520,6 @@ Canvas Fingerprint: ${canvasFingerprint}
         }
         updateCursorPosition(inputElement, cursor);
         caretPosition = range.startOffset;
-    }
-    function setCaretPosition(inputElement, position) {
-        const range = document.createRange();
-        const sel = window.getSelection();
-        range.setStart(inputElement.childNodes[0], position);
-        range.collapse(true);
-        sel.removeAllRanges();
-        sel.addRange(range);
     }
     function updateCursorPosition(inputElement, cursor) {
         const range = window.getSelection().getRangeAt(0);
