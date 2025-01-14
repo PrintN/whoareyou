@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', function () {
     let commandHistory = []
     let commandHistoryIndex = -1
 
+    addPrompt();
+
     const fileSystem = {
         '~': {
             type: 'directory',
@@ -91,14 +93,23 @@ else:
             }
         },
         'whoami': async () => {
-            const ipInfo = await getUserIP();
-            const browserInfo = await getBrowserInfo();
-            const webRTCLeak = await webrtcLeakTest();
-            
-            outputElement.innerHTML += `<div>${ipInfo}</div>`;
-            outputElement.innerHTML += `<div>${browserInfo}</div>`;
-            outputElement.innerHTML += `<div>${webRTCLeak}</div>`
-            addPrompt();
+            const { loader, interval } = showLoader("Crunching up the data for you", "Searching for unicorns", "Fetching the good stuff, please wait", "Just a sec", "Please hold on while we gather your info", "Getting ready for takeoff");
+            const results = [];
+            try {
+                const ipInfo = await getUserIP();
+                results.push(ipInfo);
+
+                const browserInfo = await getBrowserInfo();
+                results.push(browserInfo);
+
+                const webRTCLeak = await webrtcLeakTest();
+                results.push(webRTCLeak);
+            } catch (error) {
+                results.push(`Error: ${error.message}`);
+            } finally {
+                hideLoader(loader, interval);
+            }
+            outputElement.innerHTML += `<div>${results.join('</div><div>')}</div>`;
         },
         'clear': () => {
             outputElement.innerHTML = '';
@@ -214,7 +225,42 @@ Arrow Up/Down - Navigate through previous commands in history`;
         },
     };
     
-    function getUserIP() {
+    function showLoader(...messages) {
+        const existingLoader = document.querySelector('.loader');
+        if (existingLoader) {
+            existingLoader.remove();
+        }
+    
+        const loader = document.createElement('div');
+        loader.className = 'loader';
+        outputElement.appendChild(loader);
+    
+        let dotCount = 0;
+        let currentIndex = 0;
+    
+        const updateLoaderMessage = () => {
+            loader.textContent = messages[currentIndex] + '.'.repeat(dotCount);
+            dotCount = (dotCount + 1) % 4;
+        };
+        updateLoaderMessage();
+    
+        const messageInterval = setInterval(() => {
+            currentIndex = (currentIndex + 1) % messages.length;
+            dotCount = 0;
+            updateLoaderMessage();
+        }, 3500);
+        const dotInterval = setInterval(updateLoaderMessage, 400);
+        return { loader, messageInterval, dotInterval };
+    }
+
+    function hideLoader(loader, interval) {
+        clearInterval(interval);
+        if (loader && outputElement.contains(loader)) {
+            outputElement.removeChild(loader);
+        }
+    }
+
+    async function getUserIP() {
         return fetch('https://ipapi.co/json/')
             .then(response => {
                 if (!response.ok) {
@@ -246,13 +292,13 @@ Latitude, Longitude: ${data.latitude}, ${data.longitude}`;
             });
     }
     
-    function getClipboardContent() {
+    async function getClipboardContent() {
         return navigator.clipboard.readText()
             .then(text => text || 'Clipboard is empty')
             .catch(() => 'Unable to access clipboard');
     }
 
-    function webrtcLeakTest() {
+    async function webrtcLeakTest() {
         return new Promise((resolve) => {
             const pc = new RTCPeerConnection({ iceServers: [] });
             const ipAddresses = new Set();
@@ -427,16 +473,18 @@ Canvas Fingerprint: ${canvasFingerprint}
 </pre>`;
     }
 
-    addPrompt();
-
-    function handleCommand(input) {
+    async function handleCommand(input) {
         let result = '';
         const args = input.split(' ');
         const command = args[0];
         const argument = args.slice(1).join(' ');
 
         if (commands[command]) {
-            result = commands[command](argument);
+            if (commands[command].constructor.name === 'AsyncFunction') {
+                result = await commands[command](argument);
+            } else {
+                result = commands[command](argument);
+            }
         } else {
             result = `command not found: ${input}`;
         }
@@ -448,6 +496,7 @@ Canvas Fingerprint: ${canvasFingerprint}
             commandHistoryIndex = commandHistory.length;
             fileSystem['.bash_history'].content = commandHistory.join('\n');
         }
+        addPrompt();
     }
 
     function addPrompt() {
@@ -505,8 +554,8 @@ Canvas Fingerprint: ${canvasFingerprint}
             if (input) {
                 handleCommand(input.toLowerCase());
             }
-            inputElement.textContent = "";
-            addPrompt();
+            inputElement.contentEditable = "false";
+            cursor.style.visibility = "hidden";
         }
         else if (event.key === 'ArrowUp') {
             event.preventDefault();
