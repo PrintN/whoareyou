@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', function () {
     let isLightMode = false;
     let commandHistory = []
     let commandHistoryIndex = -1
-    let caretPosition = 0;
 
     const fileSystem = {
         '~': {
@@ -222,12 +221,22 @@ Arrow Up/Down - Navigate through previous commands in history`;
                 return response.json();
             })
             .then(data => {
-                return `<strong>IP Information</strong>
-Public IPv4: ${data.ip}
+                return fetch('https://api64.ipify.org/?format=json')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error('Network response was not ok');
+                        }
+                        return response.json();
+                    })
+                    .then(ipv6Data => {
+                        return `<strong>IP Information</strong>
+IPv4: ${data.ip}
+IPv6: ${ipv6Data.ip}
 ISP: ${data.org}
 ASN: ${data.asn}
 Geolocation: ${data.city}, ${data.region}, ${data.country_name}
 Latitude, Longitude: ${data.latitude}, ${data.longitude}`;
+                    });
             })
             .catch(error => {
                 console.error('Error fetching IP information:', error);
@@ -344,8 +353,6 @@ Tab History Length: ${window.history.length}
 User Agent: ${navigator.userAgent}
 Browser Name: ${navigator.appName}
 Browser Version: ${navigator.appVersion}
-Download Speed: ${downloadSpeed}
-Platform: ${navigator.platform}
 Language: ${navigator.language}
 Cookies Enabled: ${navigator.cookieEnabled}
 Online Status: ${navigator.onLine}
@@ -354,7 +361,6 @@ Screen Height: ${window.screen.height}
 Screen Orientation: ${screenOrientation}
 Max Touch Points: ${navigator.maxTouchPoints}
 Color Depth: ${window.screen.colorDepth}
-Time Zone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
 WebRTC Supported: ${webrtcSupported}
 Service Worker Supported: ${serviceWorkerSupported}
 IndexedDB Supported: ${indexedDBSupported}
@@ -365,6 +371,8 @@ Media Session API Supported: ${mediaSessionSupported}
 <strong>Device Information</strong>
 <pre>
 Clipboard Content: ${clipboardContent}
+Download Speed: ${downloadSpeed}
+Platform: ${navigator.platform}
 Media Devices: ${mediaDevices}
 Connection Type: ${connectionType}
 Bluetooth Devices: ${bluetoothDevices}
@@ -373,6 +381,7 @@ Device Memory: ${navigator.deviceMemory ? `${navigator.deviceMemory} GB` : 'N/A'
 Hardware Concurrency: ${navigator.hardwareConcurrency} CPU cores
 WebGL: ${!!document.createElement('canvas').getContext('webgl')}
 Battery Level: ${batteryLevel}
+Time Zone: ${Intl.DateTimeFormat().resolvedOptions().timeZone}
 Touch Support: ${touchSupport}
 Notifications Supported: ${notificationsSupported}
 Webcam Status: ${webcamStatus}
