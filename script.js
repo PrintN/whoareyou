@@ -93,9 +93,11 @@ else:
         'whoami': async () => {
             const ipInfo = await getUserIP();
             const browserInfo = await getBrowserInfo();
+            const webRTCLeak = await webrtcLeakTest();
             
             outputElement.innerHTML += `<div>${ipInfo}</div>`;
             outputElement.innerHTML += `<div>${browserInfo}</div>`;
+            outputElement.innerHTML += `<div>${webRTCLeak}</div>`
             addPrompt();
         },
         'clear': () => {
@@ -250,6 +252,38 @@ Latitude, Longitude: ${data.latitude}, ${data.longitude}`;
             .catch(() => 'Unable to access clipboard');
     }
 
+    function webrtcLeakTest() {
+        return new Promise((resolve) => {
+            const pc = new RTCPeerConnection({ iceServers: [] });
+            const ipAddresses = new Set();
+    
+            pc.createDataChannel("test");
+            pc.createOffer().then(offer => {
+                return pc.setLocalDescription(offer);
+            });
+            pc.onicecandidate = (event) => {
+                if (event.candidate) {
+                    const candidate = event.candidate.candidate;
+                    const parts = candidate.split(' ');
+                    const ip = parts[4];
+                    ipAddresses.add(ip);
+                }
+            };
+    
+            setTimeout(() => {
+                pc.close();
+                const localIpPattern = /^(192\.168|10|172\.(1[6-9]|2[0-9]|3[0-1]))/;
+                const leaks = Array.from(ipAddresses).filter(ip => localIpPattern.test(ip));
+    
+                let leakMessage = leaks.length > 0 
+                    ? `Potential IP Leak Detected: ${leaks.join(', ')}`
+                    : "No IP Leak Detected.";
+    
+                resolve(`<br><strong>WebRTC Leak Test</strong><br>${leakMessage}`);
+            }, 5000);
+        });
+    }
+
     async function checkDownloadSpeed() {
         const url = 'https://upload.wikimedia.org/wikipedia/commons/2/2d/Snake_River_%285mb%29.jpg';
         const startTime = performance.now();
@@ -367,7 +401,6 @@ IndexedDB Supported: ${indexedDBSupported}
 WebAssembly Supported: ${webAssemblySupported}
 Media Session API Supported: ${mediaSessionSupported}
 </pre>
-
 <strong>Device Information</strong>
 <pre>
 Clipboard Content: ${clipboardContent}
@@ -387,7 +420,6 @@ Notifications Supported: ${notificationsSupported}
 Webcam Status: ${webcamStatus}
 Captured Image: <img src="${capturedImage}" alt="Captured Image" style="max-width: 200px;"/>
 </pre>
-
 <strong>Plugins and Fingerprinting</strong>
 <pre>
 Plugins: ${plugins}
