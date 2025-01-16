@@ -553,6 +553,9 @@ Canvas Fingerprint: ${canvasFingerprint}
             const input = inputElement.textContent.trim();
             if (input) {
                 handleCommand(input.toLowerCase());
+            } 
+            else {
+                addPrompt();
             }
             inputElement.contentEditable = "false";
             cursor.style.visibility = "hidden";
